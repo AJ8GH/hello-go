@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: db
+    image: mysql
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: db
+      MYSQL_USER: gopher
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    expose:
+      - 3306
+    volumes:
+      - ./data:/var/lib/mysql
+
+volumes:
+  data:
