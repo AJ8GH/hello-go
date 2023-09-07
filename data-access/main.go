@@ -26,27 +26,33 @@ func main() {
 		Net:    "tcp",
 		Addr:   "127.0.0.1:3306",
 		DBName: "recordings",
-		}
-		// Get a database handle.
-		var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
 	}
 
+	// Get a database handle.
+	var err error
+	db, err = sql.Open("mysql", cfg.FormatDSN())
+	handleErr(err)
 	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
+	handleErr(pingErr)
 	fmt.Println("Connected!")
 
 	insertData()
 
 	albums, err := albumsByArtist("John Coltrane")
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleErr(err)
 	fmt.Printf("Albums found: %v\n", albums)
+
+	alb, err := albumById(2)
+	handleErr(err)
+	fmt.Printf("Album found: %v\n", alb)
+
+	albID, err := addAlbum(Album{
+		Title:  "The Modern Sound of Betty Carter",
+		Artist: "Betty Carter",
+		Price:  49.99,
+	})
+	handleErr(err)
+	fmt.Printf("ID of added album: %v\n", albID)
 }
 
 func insertData() {
@@ -89,8 +95,40 @@ func albumsByArtist(name string) ([]Album, error) {
 	return albums, nil
 }
 
+// albumByID queries for the album with the specified ID.
+func albumById(id int64) (Album, error) {
+	var alb Album
+
+	row := db.QueryRow("SELECT * FROM album WHERE id = ?", id)
+	if err := row.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err != nil {
+		if err == sql.ErrNoRows {
+			return alb, fmt.Errorf("albumsById %d: no such album", id)
+		}
+		return alb, fmt.Errorf("albumsById %d: %v, id", id, err)
+	}
+	return alb, nil
+}
+
+// addAlbum adds the specified album to the database,
+// returning the album ID of the new entry
+func addAlbum(alb Album) (int64, error) {
+	result, err := db.Exec("INSERT INTO album (title, artist, price) VALUES (?, ?, ?)", alb.Title, alb.Artist, alb.Price)
+	if err != nil {
+		return 0, fmt.Errorf("addAlbum: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("addAlbum: %v", err)
+	}
+	return id, nil
+}
+
 func exec(query string) {
 	_, err := db.Exec(query)
+	handleErr(err)
+}
+
+func handleErr(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
