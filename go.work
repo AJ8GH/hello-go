@@ -1,0 +1,10 @@
+go 1.20
+
+use (
+	./data-access
+	./fuzz
+	./generics
+	./greetings
+	./hello
+	./web-service-gin
+)
