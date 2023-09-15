@@ -15,7 +15,10 @@ func TestReverse(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		got := Reverse(tc.in)
+		got, err := Reverse(tc.in)
+		if err != nil {
+			t.Errorf("Error: %q", err)
+		}
 		if got != tc.want {
 			t.Errorf("Got: %q, want: %q", got, tc.want)
 		}
@@ -27,9 +30,16 @@ func FuzzReverse(f *testing.F) {
 	for _, tc := range testcases {
 		f.Add(tc) // Use f.Add to provide a seed corpus
 	}
+
 	f.Fuzz(func(t *testing.T, orig string) {
-		rev := Reverse(orig)
-		doubleRev := Reverse(rev)
+		rev, err1 := Reverse(orig)
+		if err1 != nil {
+			t.Skip()
+		}
+		doubleRev, err2 := Reverse(rev)
+		if err2 != nil {
+			t.Skip()
+		}
 		if orig != doubleRev {
 			t.Errorf("Before: %q, After: %q", orig, doubleRev)
 		}
