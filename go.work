@@ -6,5 +6,6 @@ use (
 	./generics
 	./greetings
 	./hello
+	./vuln
 	./web-service-gin
 )
